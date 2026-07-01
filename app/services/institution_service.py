@@ -5,7 +5,10 @@ from langchain_community.tools.sql_database.tool import QuerySQLDatabaseTool
 from app.database.db_loader import get_database
 from app.llm import llm
 from app.schemas.institution_schema import INSTITUTION_SCHEMA
+
 from app.utils.sql_utils import clean_sql
+from app.utils.location_keywords import LOCATION_KEYWORDS
+from app.utils.keyword_expander import expand_keywords
 
 
 class InstitutionService:
@@ -29,6 +32,8 @@ class InstitutionService:
         """
         User Question
               ↓
+        Expand location keywords
+              ↓
         Generate SQL
               ↓
         Execute SQL
@@ -36,34 +41,51 @@ class InstitutionService:
         Convert Result to Natural Language
         """
 
+        # Expand English/Bangla location names
+        location_instruction = expand_keywords(
+            question=question,
+            keyword_map=LOCATION_KEYWORDS,
+            search_target="""
+                            Institution location columns:
+                            - division
+                            - district
+                            - thana
+                            - union_name
+                            - mauza_name
+                            - address
+                            - post
+                            """,
+        )
+
         full_question = f"""
-        {INSTITUTION_SCHEMA}
+                        {INSTITUTION_SCHEMA}
 
-        User Question:
-        {question}
-        """
+                        {location_instruction}
+                        """
 
-        # Generate SQL
+        # Step 1: Generate SQL
         sql_query = self.sql_chain.invoke(
             {
                 "question": full_question
             }
         )
-        
+
         sql_query = clean_sql(sql_query)
+
         print("\nGenerated SQL")
         print(sql_query)
 
-        # Execute SQL
+        # Step 2: Execute SQL
         sql_result = self.sql_executor.invoke(sql_query)
 
         print("\nSQL Result")
         print(sql_result)
 
-        # Convert to natural language
+        # Step 3: Convert SQL result to natural language
+
         prompt = ChatPromptTemplate.from_template(
             """
-            You are an assistant for Bangladesh institutional information.
+            You are an assistant for Bangladesh educational institution information.
 
             User Question:
             {question}
@@ -73,10 +95,15 @@ class InstitutionService:
 
             Write a concise, natural-language answer.
 
-            If multiple records are returned:
-            - Format them as a numbered list.
+            Rules:
+            - If multiple institutions are returned, present them as a numbered list.
+            - Include the institute name.
+            - Include the institute type if available.
+            - Include the EIIN if available.
+            - Include the address if available.
+            - If the SQL result is a COUNT(*), answer using the count directly.
             - Do NOT mention SQL.
-            - If no records are found, say so politely.
+            - If no institutions are found, clearly state that.
             """
         )
 
