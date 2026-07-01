@@ -5,6 +5,7 @@ from langchain_community.tools.sql_database.tool import QuerySQLDatabaseTool
 from app.database.db_loader import get_database
 from app.llm import llm
 from app.schemas.institution_schema import INSTITUTION_SCHEMA
+from app.utils.sql_utils import clean_sql
 
 
 class InstitutionService:
@@ -48,7 +49,8 @@ class InstitutionService:
                 "question": full_question
             }
         )
-
+        
+        sql_query = clean_sql(sql_query)
         print("\nGenerated SQL")
         print(sql_query)
 

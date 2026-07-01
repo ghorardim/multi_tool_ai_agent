@@ -5,6 +5,7 @@ from app.schemas.hospital_schema import HOSPITAL_SCHEMA
 
 from app.database.db_loader import get_database
 from app.llm import llm
+from app.utils.sql_utils import clean_sql
 
 
 class HospitalService:
@@ -49,6 +50,7 @@ class HospitalService:
             }
         )
 
+        sql_query = clean_sql(sql_query)
         print("\nGenerated SQL")
         print(sql_query)
 

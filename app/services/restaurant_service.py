@@ -1,12 +1,16 @@
 from langchain.chains import create_sql_query_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.tools.sql_database.tool import QuerySQLDatabaseTool
-from app.utils.food_keywords import FOOD_KEYWORDS
 
 from app.database.db_loader import get_database
 from app.llm import llm
 from app.schemas.restaurant_schema import RESTAURANT_SCHEMA
-import re
+
+from app.utils.sql_utils import clean_sql
+
+from app.utils.food_keywords import FOOD_KEYWORDS
+from app.utils.location_keywords import LOCATION_KEYWORDS
+from app.utils.keyword_expander import expand_keywords
 
 
 class RestaurantService:
@@ -26,49 +30,11 @@ class RestaurantService:
             db=self.db
         )
 
-    def _expand_food_keywords(self, question: str) -> str:
-        """
-        Expand food keywords into their English and Bangla variants
-        to help the LLM generate better SQL.
-        """
-
-        lower_question = question.lower()
-
-        matched_variants = []
-
-        for keyword, variants in FOOD_KEYWORDS.items():
-            if re.search(rf"\b{re.escape(keyword)}\b", lower_question):
-                matched_variants.extend(variants)
-
-            # Remove duplicates while preserving order
-            matched_variants = list(dict.fromkeys(matched_variants))
-
-            if not matched_variants:
-                return f"""
-        User Question:
-        {question}
-        """
-
-        variants_text = ", ".join(matched_variants)
-
-        return f"""
-            User Question:
-            {question}
-
-            IMPORTANT:
-
-            When searching the restaurant name column,
-            treat the following keywords as equivalent:
-
-            {variants_text}
-
-            Generate SQL that searches for ALL of these keywords
-            using SQLite LIKE conditions.
-            """
-    
     def run(self, question: str) -> str:
         """
         User Question
+              ↓
+        Expand Keywords
               ↓
         Generate SQL
               ↓
@@ -77,12 +43,29 @@ class RestaurantService:
         Convert Result to Natural Language
         """
 
-        expanded_question = self._expand_food_keywords(question)
+        # Food keyword expansion
+        food_instruction = expand_keywords(
+            question=question,
+            keyword_map=FOOD_KEYWORDS,
+            search_target="name",
+        )
+
+        # Location keyword expansion
+        location_instruction = expand_keywords(
+            question=question,
+            keyword_map=LOCATION_KEYWORDS,
+            search_target="address",
+        )
 
         full_question = f"""
                         {RESTAURANT_SCHEMA}
 
-                        {expanded_question}
+                        {food_instruction}
+
+                        {location_instruction}
+
+                        User Question:
+                        {question}
                         """
 
         # Step 1: Generate SQL
@@ -91,6 +74,8 @@ class RestaurantService:
                 "question": full_question
             }
         )
+
+        sql_query = clean_sql(sql_query)
 
         print("\nGenerated SQL")
         print(sql_query)
