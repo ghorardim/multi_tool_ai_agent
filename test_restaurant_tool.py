@@ -1,6 +1,6 @@
 from app.tools.restaurant_tool import restaurants_db_tool
 
-question = "List the top 5 highest rated restaurants."
+question = "Find restaurants in Chattogram serving biryani."
 
 response = restaurants_db_tool.invoke(
     {
