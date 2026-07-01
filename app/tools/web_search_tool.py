@@ -1,33 +1,70 @@
 from langchain.tools import tool
-from langchain_community.tools import DuckDuckGoSearchRun
+from ddgs import DDGS
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.llm import llm
-
-search = DuckDuckGoSearchRun()
 
 
 @tool
 def web_search_tool(question: str) -> str:
     """
-    Use this tool ONLY for general knowledge questions.
+    Use this tool ONLY for questions that cannot be answered
+    using the local databases.
+
+    Examples:
+    - government policies
+    - healthcare policy
+    - Bangladesh history
+    - current events
+    - definitions
+    - general knowledge
     """
 
-    search_result = search.run(question)
+    try:
+        with DDGS() as ddgs:
+            results = list(
+                ddgs.text(
+                    question,
+                    max_results=5,
+                )
+            )
+
+        if not results:
+            return "No relevant web search results were found."
+
+        formatted_results = "\n\n".join(
+            [
+                f"Title: {r.get('title', '')}\n"
+                f"Body: {r.get('body', '')}\n"
+                f"URL: {r.get('href', '')}"
+                for r in results
+            ]
+        )
+
+    except Exception as e:
+        return f"Web search failed: {e}"
 
     prompt = ChatPromptTemplate.from_template(
         """
-        You are a helpful AI assistant.
+        You are an expert assistant.
+
+        Answer ONLY using the web search results below.
 
         User Question:
         {question}
 
-        Search Result:
-        {result}
+        Web Search Results:
+        {results}
 
-        Write a concise and accurate answer based on the search result.
-        Do not mention DuckDuckGo or that a search was performed.
-        If the search result is insufficient, say so politely.
+        Rules:
+
+        - Give a direct answer.
+        - If multiple sources agree, combine the information.
+        - If appropriate, use bullet points.
+        - Do NOT mention DuckDuckGo.
+        - Do NOT mention that a search was performed.
+        - If the search results truly do not contain the answer, clearly say that.
+        - Do NOT invent facts.
         """
     )
 
@@ -36,7 +73,7 @@ def web_search_tool(question: str) -> str:
     response = chain.invoke(
         {
             "question": question,
-            "result": search_result,
+            "results": formatted_results,
         }
     )
 

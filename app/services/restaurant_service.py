@@ -100,10 +100,23 @@ class RestaurantService:
             Write a concise, natural-language answer.
 
             Rules:
+            - Answer ONLY using the SQL Result.
+            - Do NOT use outside knowledge.
+            - Do NOT guess or speculate.
+            - If the SQL Result contains COUNT(*), answer using that count.
             - If multiple restaurants are returned, present them as a numbered list.
-            - Include the restaurant name, rating (if available), and address.
+            - Include the restaurant name.
+            - Include the rating if available.
+            - Include the number of reviews if available.
+            - Include the address if available.
             - Do NOT mention SQL.
-            - If no restaurants are found, clearly state that.
+            - If the SQL Result is empty ([]), respond exactly:
+
+            "No matching restaurants were found in the restaurant database."
+
+            - Do NOT invent restaurants.
+            - Do NOT recommend restaurants that are not present in the SQL Result.
+            - Do NOT suggest searching the web or another database.
             """
         )
 

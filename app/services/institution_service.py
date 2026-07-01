@@ -96,14 +96,23 @@ class InstitutionService:
             Write a concise, natural-language answer.
 
             Rules:
+            - Answer ONLY using the SQL Result.
+            - Do NOT use outside knowledge.
+            - Do NOT guess or speculate.
+            - If the SQL Result contains COUNT(*), answer using that count.
             - If multiple institutions are returned, present them as a numbered list.
             - Include the institute name.
             - Include the institute type if available.
             - Include the EIIN if available.
             - Include the address if available.
-            - If the SQL result is a COUNT(*), answer using the count directly.
             - Do NOT mention SQL.
-            - If no institutions are found, clearly state that.
+            - If the SQL Result is empty ([]), respond exactly:
+
+                "No matching records were found in the institutions database."
+
+            - Do NOT say the institution does not exist.
+            - Do NOT say Bangladesh has no such university.
+            - Do NOT suggest web search or other databases.
             """
         )
 

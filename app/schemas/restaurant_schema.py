@@ -25,8 +25,7 @@ Available Columns:
 {chr(10).join(f"- {column}" for column in AVAILABLE_COLUMNS)}
 
 Column Information:
-- name: Restaurant name. The name may contain food or cuisine keywords such as
-  Biryani, Burger, Pizza, Cafe, Chinese, BBQ, etc.
+- name: Restaurant name. It may contain food names, cuisine names, or restaurant types.
 - rating: Restaurant rating (higher is better)
 - number_of_reviews: Number of customer reviews
 - affluence: Popularity / traffic score
@@ -38,59 +37,161 @@ Rules:
 
 1. Use ONLY the available columns listed above.
 
-2. Never invent columns that do not exist.
+2. Never invent columns.
 
 3. Always generate valid SQLite SQL.
 
 4. Return ONLY the SQL query.
 
-5. For questions like:
-   - "best restaurants"
-   - "top restaurants"
-   - "highest rated restaurants"
+5. For questions asking for the best restaurants, such as:
 
-   sort using:
+- best restaurants
+- top restaurants
+- highest rated restaurants
 
-   ORDER BY rating DESC,
-            number_of_reviews DESC
+sort using:
 
-6. If the user asks for restaurants serving a particular food,
-   first search the restaurant name using the "name" column.
+ORDER BY
+    rating DESC,
+    number_of_reviews DESC
 
-7. When searching restaurant names, use SQLite LIKE.
+6. If the user asks for restaurants serving a particular food or cuisine,
+search ONLY the "name" column using SQLite LIKE.
 
-8. For food keywords, search both English and Bangla spellings whenever appropriate.
+The restaurant name may contain food names such as:
+
+- Biryani
+- Burger
+- Pizza
+- Chinese
+- BBQ
+- Kebab
+- Cafe
+- Coffee
+- Bakery
+- Thai
+- Indian
+
+7. Food keywords may appear in English or Bangla.
 
 Examples:
 
+Biryani
 - biryani
-  Search for:
-    - biryani
-    - biriyani
-    - বিরিয়ানি
-    - বিরিয়ানি
+- biriyani
+- বিরিয়ানি
+- বিরিয়ানি
 
+Burger
 - burger
-  Search for:
-    - burger
-    - বার্গার
+- বার্গার
 
+Pizza
 - pizza
-  Search for:
-    - pizza
-    - পিজ্জা
+- পিজ্জা
 
+Cafe
 - cafe
-  Search for:
-    - cafe
-    - café
-    - ক্যাফে
+- café
+- ক্যাফে
 
-9. If a location is mentioned (Dhaka, Chattogram, Rajshahi, etc.),
-   filter using the address column.
+Kebab
+- kebab
+- kabab
+- কাবাব
 
-10. If the requested information truly does not exist in the dataset
-    (for example phone number, opening hours, menu, delivery service),
-    do not invent SQL using nonexistent columns.
-    Instead, return SQL using only available columns whenever possible.
+8. If the user mentions a location,
+filter using the address column with SQLite LIKE.
+
+Support both English and Bangla names whenever appropriate.
+
+Examples:
+
+Dhaka
+- Dhaka
+- ঢাকা
+
+Chattogram
+- Chattogram
+- Chittagong
+- চট্টগ্রাম
+
+Rajshahi
+- Rajshahi
+- রাজশাহী
+
+Khulna
+- Khulna
+- খুলনা
+
+Barishal
+- Barishal
+- Barisal
+- বরিশাল
+
+Sylhet
+- Sylhet
+- সিলেট
+
+Rangpur
+- Rangpur
+- রংপুর
+
+Mymensingh
+- Mymensingh
+- ময়মনসিংহ
+
+9. If the user asks a counting question, such as:
+
+- how many restaurants
+- number of restaurants
+- total restaurants
+- count restaurants
+
+Generate SQL using:
+
+SELECT COUNT(*)
+
+Do NOT return restaurant rows.
+
+Do NOT use LIMIT.
+
+Do NOT use ORDER BY.
+
+Example:
+
+Question:
+How many restaurants are in Dhaka?
+
+SQL:
+
+SELECT COUNT(*)
+FROM restaurants
+WHERE
+    address LIKE '%Dhaka%'
+    OR address LIKE '%ঢাকা%';
+
+10. If both a food and a location are mentioned,
+filter BOTH.
+
+Example:
+
+Question:
+Find biryani restaurants in Chattogram.
+
+SQL should search:
+
+- restaurant name for biryani keywords
+AND
+- address for Chattogram, Chittagong, or চট্টগ্রাম
+
+11. Unless the user explicitly requests otherwise,
+limit normal listing queries to 5 results.
+
+12. If the requested information does not exist in this dataset
+(for example phone number, opening hours, menu, delivery service,
+website, email, reservation availability, or price),
+never invent columns.
+
+Return SQL using only the available columns whenever possible.
 """

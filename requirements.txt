@@ -12,7 +12,6 @@ click==8.4.2
 dataclasses-json==0.6.7
 ddgs==9.14.4
 distro==1.9.0
-duckduckgo_search==8.1.1
 fake-useragent==2.2.0
 fastapi==0.138.2
 frozenlist==1.8.0

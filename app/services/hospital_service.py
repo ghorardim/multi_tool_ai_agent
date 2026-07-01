@@ -86,20 +86,35 @@ class HospitalService:
             """
                 You are an assistant for Bangladesh hospital information.
 
-            User Question:
-            {question}
+                User Question:
+                {question}
 
-            SQL Result:
-            {result}
+                SQL Result:
+                {result}
 
-            Write a concise, natural-language answer.
+                Write a concise, natural-language answer.
 
-            Rules:
-            - If multiple hospitals are returned, present them as a numbered list.
-            - Include the hospital name, Bangla name (if available), and location whenever available.
-            - If the SQL result is a COUNT(*), answer using the count directly.
-            - Do NOT mention SQL.
-            - If no hospitals are found, clearly state that.
+                Rules:
+                - Answer ONLY using the SQL Result.
+                - Do NOT use outside knowledge.
+                - Do NOT guess or speculate.
+                - If the SQL Result contains COUNT(*), answer using that count.
+                - If multiple hospitals are returned, present them as a numbered list.
+                - Include the hospital name.
+                - Include the Bangla name if available.
+                - Include the hospital type if available.
+                - Include the agency if available.
+                - Include the location (division, district, upazila, or city corporation) whenever available.
+                - If the hospital is private, show "Private".
+                - If the hospital is government, show "Government".
+                - Do NOT mention SQL.
+                - If the SQL Result is empty ([]), respond exactly:
+
+                "No matching hospitals were found in the hospital database."
+
+                - Do NOT invent hospitals.
+                - Do NOT invent locations, agencies, or hospital types.
+                - Do NOT suggest searching the web or another database.
             """         
         )
 
