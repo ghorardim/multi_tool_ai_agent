@@ -6,7 +6,7 @@ from app.database.db_loader import get_database
 from app.llm import llm
 from app.schemas.hospital_schema import HOSPITAL_SCHEMA
 
-from app.utils.sql_utils import clean_sql
+from app.utils.sql_utils import adjust_location_filter, clean_sql, fix_limit
 from app.utils.location_keywords import LOCATION_KEYWORDS
 from app.utils.keyword_expander import expand_keywords
 
@@ -23,6 +23,8 @@ class HospitalService:
             llm=llm,
             db=self.db,
         )
+
+        #print("Hospital sql_chain: " + str(self.sql_chain))
 
         self.sql_executor = QuerySQLDatabaseTool(
             db=self.db
@@ -70,6 +72,8 @@ class HospitalService:
         )
 
         sql_query = clean_sql(sql_query)
+        sql_query = fix_limit(question, sql_query)
+        sql_query = adjust_location_filter(sql_query,question)
 
         print("\nGenerated SQL")
         print(sql_query)
