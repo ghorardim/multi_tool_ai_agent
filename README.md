@@ -50,6 +50,67 @@ The project is built using **Python**, **LangChain**, **OpenAI GPT**, **SQLite**
 
 ---
 
+# Overall Architecture
+
+```text
+                    ┌─────────────────────────┐
+                    │      User Question      │
+                    └────────────┬────────────┘
+                                 │
+                                 ▼
+                    ┌─────────────────────────┐
+                    │      ReAct AI Agent     │
+                    └────────────┬────────────┘
+                                 │
+             ┌───────────────────┼───────────────────┐
+             │                   │                   │
+             ▼                   ▼                   ▼
+     Hospitals Tool      Institutions Tool    Restaurants Tool
+             │                   │                   │
+             ▼                   ▼                   ▼
+     Hospital Service    Institution Service  Restaurant Service
+             │                   │                   │
+             ▼                   ▼                   ▼
+       SQL Generation      SQL Generation      SQL Generation
+             │                   │                   │
+             ▼                   ▼                   ▼
+       SQLite Database     SQLite Database     SQLite Database
+             │                   │                   │
+             └───────────────────┼───────────────────┘
+                                 │
+                                 ▼
+                      Natural Language Response
+                                 │
+                                 ▼
+                            Final Answer
+
+                    (Fallback when data is unavailable)
+
+                                 │
+                                 ▼
+                         Web Search Tool
+                                 │
+                                 ▼
+                            Search Results
+                                 │
+                                 ▼
+                      Natural Language Response
+```
+
+### Architecture Flow
+
+1. The user submits a natural language question.
+2. The ReAct AI Agent analyzes the question and selects the most appropriate tool.
+3. The selected service expands keywords (such as English/Bangla locations when applicable).
+4. The LLM generates a SQLite query based on the database schema.
+5. SQL post-processing validates and adjusts the generated query when necessary.
+6. The query is executed against the corresponding SQLite database.
+7. The SQL result is converted into a concise natural language response.
+8. If the required information is unavailable in the local databases, the agent automatically falls back to the Web Search Tool.
+9. The final answer is returned to the user.
+
+---
+
 # Features
 
 - ReAct AI Agent
@@ -137,7 +198,7 @@ multi_tool_ai_agent/
 │   ├── utils/
 │   └── llm.py
 │
-├── data/
+├── datasets/
 │
 ├── explore/
 │
@@ -165,7 +226,7 @@ multi_tool_ai_agent/
 Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/ghorardim/multi_tool_ai_agent.git
 
 cd multi_tool_ai_agent
 ```
